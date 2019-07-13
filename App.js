@@ -1,74 +1,56 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-// import CameraExample from './camera'
-import Mainfile from './app/mainfile'
+import React, { Component } from 'react';
+import { StyleSheet, View, Button, Text } from 'react-native';
+import { FetchQuizApi } from './assets/Components/quizApi'
+import Quiz from './assets/Components/quiz';
+import DetectFace from './assets/Components/Detectface'
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <View style={styles.header} >
-        <Text style={styles.h1}>Controlling Camera </Text>
-        <Text style={styles.h1}> Todo App </Text>
-      </View>
-      <View style={styles.mainComponent}>
-        <Mainfile />
-      </View>
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Todo App for Add, Edit or Delet Images</Text>
-      </View>
-    </View>
-  );
-}
+export default class App extends Component {
+    constructor() {
+        super();
+        this.state = {
+            questions_answers: [],
+            quiz: false,
+            auth: false,
+        }
+        this.faceAuth = this.faceAuth.bind(this)
+    }
+    // componentDidMount() {
+    //     this.getData()
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'white',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    // color: 'white',
-    // backgroundColor: 'grey'
-  },
-  header: {
-    flex: 0.15,
-    paddingTop: 35,
-    borderWidth: 1,
-    width: '100%',
-    backgroundColor: 'grey',
-    // color: 'white',
+    // }
 
-  },
-  footer: {
-    flex: 0.03,
-    borderWidth: 1,
-    width: '100%',
-    backgroundColor: 'grey',
-    color: 'white',
+    async getData() {
+        try {
+            const data = await FetchQuizApi()
+            let array = data.map((e) => {
+                return obj = {
+                    question: e.question,
+                    incorrect_answers: e.incorrect_answers,
+                    correct_answer: e.correct_answer
+                }
+            })
+            this.setState({ questions_answers: array, quiz: true })
+        } catch (e) { console.log('error == > ', e) }
+    }
+    mount(){
+        this.getData()
+    }
+    faceAuth(){
+        this.setState({auth: true})
+    }
+    quizUnmount(){
+        this.setState({quiz: false})
+        // this.getData()
+    }
 
-  },
-  mainComponent: {
-    flex: 1,
-    borderWidth: 1,
-    width: '100%',
-  },
-  h1: {
-    fontSize: 30,
-    textAlign: 'center',
-    color: 'black',
-    letterSpacing: 3,
-    fontStyle: 'italic',
-    fontWeight: '500',
-    textShadowColor: 'white',
-    textShadowRadius: 25,
-  },
-  footerText: {
-    textAlign: 'center',
-    color: 'black',
-    letterSpacing: 2,
-    fontStyle: 'italic',
-    fontWeight: '500',
-    textShadowColor: 'white',
-    textShadowRadius: 15,
-  },
-});
+    render() {
+        const {questions_answers, quiz, auth} = this.state
+        return (
+            <View style={{width: '100%' , flex: 1, }}>
+            {auth && quiz && !!questions_answers.length && <Quiz unMount={()=>{this.quizUnmount()}} data={questions_answers} />}
+            {!auth && !quiz && <View style={{flex: 1}}><DetectFace faceAuth={this.faceAuth} /></View>}
+            {auth && !quiz && <View style={{flex: 1, justifyContent: 'space-around' , alignItems: 'center'}}><Button style={{backgroundColor : 'Black' , color:'white'}} onPress={()=> this.mount()} title='Lets Start !' /></View>}
+            </View>
+        )
+    }
+}; 
